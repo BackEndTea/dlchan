@@ -2,6 +2,12 @@
 
 Downloads all images from a specified 4chan board.
 
+
+## Instalation
+
+```bash
+$ go get github.com/backendtea/dlchan
+```
 ## Usage
 
 ```bash
