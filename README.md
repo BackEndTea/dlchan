@@ -14,6 +14,11 @@ $ go get github.com/backendtea/dlchan
 $ dlchan --board=v --out=./output
 ```
 
+Options:
+* `--board` (Required) Specifies the board to be downloaded from
+* `--out` (Optional) Output directory where files will go, defaults to `.`
+* `--thread` (Optional) Download only a specific thread
+
 This will create a folde named `v` inside the `./output` folder, and save all images in that folder.
 Images are named as they are on the website, which means that the unix timestap of when they were posted is the filename
 

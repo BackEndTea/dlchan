@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -45,40 +44,50 @@ func (p post) getFileName() string {
 }
 
 func main() {
-	board, saveLocation := getFlags()
+	board, saveLocation, thread := getFlags()
+
+	if board == "" {
+		fmt.Println("Please specify the board flag")
+		os.Exit(1)
+	}
 	fmt.Println("Downloading from board", board)
+	if thread != "" {
+		fmt.Println("Downloading thread: ", thread)
+	}
 	fmt.Println("Saving to loaction", saveLocation)
 
-	posts := getPosts(board, saveLocation)
-	createDirIfNotExist(saveLocation)
+	posts := getPosts(board, saveLocation, thread)
+
+	createDirIfNotExist(saveLocation + "/" + board)
 
 	for _, post := range posts {
 		downloadFile(board, post.getFileName(), saveLocation)
 	}
-
 }
 
-func getFlags() (string, string) {
+func getFlags() (string, string, string) {
 	var board string
 	flag.StringVar(&board, "board", "", "Board to download all images from")
 	var saveLocation string
 	flag.StringVar(&saveLocation, "out", ".", "Output directory to save images. A child directory with the board name will contain the images")
-	flag.Parse()
 
-	if board == "" {
-		panic(errors.New("Please specify the board flag"))
-	}
+	var thread string
+	flag.StringVar(&thread, "thread", "", "Specific thread to download (optional)")
+	flag.Parse()
 
 	saveLocation = strings.TrimSuffix(saveLocation, "/")
 
-	return board, saveLocation
+	return board, saveLocation, thread
 }
 
-func getPosts(board, saveLocation string) []post {
+func getPosts(board, saveLocation, thread string) []post {
+	if thread != "" {
+		return getThreadContent(board, thread)
+	}
 	threads := getThreads(board)
 	var posts []post
 	for _, thread := range threads {
-		posts = append(posts, getThreadContent(board, thread)...)
+		posts = append(posts, getThreadContent(board, strconv.Itoa(thread.No))...)
 	}
 	return posts
 }
@@ -96,8 +105,8 @@ func getThreads(board string) []thread {
 	return threads
 }
 
-func getThreadContent(board string, t thread) []post {
-	url := "https://a.4cdn.org/" + board + "/thread/" + strconv.Itoa(t.No) + ".json"
+func getThreadContent(board string, t string) []post {
+	url := "https://a.4cdn.org/" + board + "/thread/" + t + ".json"
 	body := []byte(readURLl(url))
 
 	var key posts
