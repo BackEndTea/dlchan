@@ -36,7 +36,7 @@ type post struct {
 	Ext string
 }
 
-const concurrencyCount int = 50
+const concurrencyCount int = 100
 
 func (p post) getFileName() string {
 	if p.Tim == 0 || p.Ext == "" {
@@ -120,6 +120,7 @@ func getThreads(board string) []thread {
 }
 
 func getThreadContent(board string, t string) []post {
+	fmt.Println("Gathering content from ", t, " thread")
 	url := "https://a.4cdn.org/" + board + "/thread/" + t + ".json"
 	body := []byte(readURLl(url))
 
@@ -147,7 +148,6 @@ func readURLl(url string) string {
 // write as it downloads and not load the whole file into memory.
 func downloadFile(board, filename, saveLocation string) {
 	if filename == "" {
-		fmt.Println("Found a post with no file, skipping")
 		return
 	}
 
@@ -157,15 +157,14 @@ func downloadFile(board, filename, saveLocation string) {
 
 	// If the file already exists, then we don't need to download it
 	if _, err := os.Stat(filename); !os.IsNotExist(err) {
-		fmt.Println("File already exists, not downloading")
+		fmt.Println(filename, " already exists, not downloading")
 		return
 	}
-	fmt.Println("Saving file to " + filename)
 
 	// Create the file
 	out, err := os.Create(filename)
 	if err != nil {
-		fmt.Println("Unable to create the file")
+		fmt.Println("Unable to create ", filename)
 		panic(err)
 	}
 	defer out.Close()
@@ -173,7 +172,7 @@ func downloadFile(board, filename, saveLocation string) {
 	// Get the data
 	resp, err := http.Get(url)
 	if err != nil {
-		fmt.Println("Unable to download the file")
+		fmt.Println("Unable to download from ", url)
 		return
 	}
 	defer resp.Body.Close()
@@ -181,9 +180,9 @@ func downloadFile(board, filename, saveLocation string) {
 	// Write the body to file
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
-		fmt.Println("Unable to write to the file")
+		fmt.Println("Unable to write to ", filename)
 		return
 	}
-	fmt.Println("Successfully downloaded file")
+	fmt.Println("Successfully downloaded ", filename)
 	return
 }
