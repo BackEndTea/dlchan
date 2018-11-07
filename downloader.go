@@ -36,6 +36,8 @@ type post struct {
 	Ext string
 }
 
+const concurrencyCount int = 50
+
 func (p post) getFileName() string {
 	if p.Tim == 0 || p.Ext == "" {
 		return ""
@@ -59,9 +61,21 @@ func main() {
 	posts := getPosts(board, saveLocation, thread)
 
 	createDirIfNotExist(saveLocation + "/" + board)
+	downloadImageFromPosts(posts, board, saveLocation)
+}
 
-	for _, post := range posts {
-		downloadFile(board, post.getFileName(), saveLocation)
+func downloadImageFromPosts(ps []post, board, saveLocation string) {
+	sem := make(chan bool, concurrencyCount)
+	for _, p := range ps {
+		sem <- true
+		go func(p post, board, saveLocation string) {
+			defer func() { <-sem }()
+			downloadFile(board, p.getFileName(), saveLocation)
+
+		}(p, board, saveLocation)
+	}
+	for i := 0; i < cap(sem); i++ {
+		sem <- true
 	}
 }
 
@@ -171,4 +185,5 @@ func downloadFile(board, filename, saveLocation string) {
 		return
 	}
 	fmt.Println("Successfully downloaded file")
+	return
 }
