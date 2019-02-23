@@ -38,6 +38,9 @@ type post struct {
 
 const concurrencyCount int = 100
 
+var downloadedCount int
+var alreadyDownloadedCount int
+
 func (p post) getFileName() string {
 	if p.Tim == 0 || p.Ext == "" {
 		return ""
@@ -62,6 +65,8 @@ func main() {
 
 	createDirIfNotExist(saveLocation + "/" + board)
 	downloadImageFromPosts(posts, board, saveLocation)
+	fmt.Println("Downloaded", downloadedCount, "new images.")
+	fmt.Println(alreadyDownloadedCount, "images were previously downloaded")
 }
 
 func downloadImageFromPosts(ps []post, board, saveLocation string) {
@@ -158,6 +163,7 @@ func downloadFile(board, filename, saveLocation string) {
 	// If the file already exists, then we don't need to download it
 	if _, err := os.Stat(filename); !os.IsNotExist(err) {
 		fmt.Println(filename, " already exists, not downloading")
+		alreadyDownloadedCount++
 		return
 	}
 
@@ -184,5 +190,6 @@ func downloadFile(board, filename, saveLocation string) {
 		return
 	}
 	fmt.Println("Successfully downloaded ", filename)
+	downloadedCount++
 	return
 }
